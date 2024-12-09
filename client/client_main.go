@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"time"
 
-	"github.com/prachin77/pkr/client/cmd"
+	"github.com/prachin77/pkr/client/commands"
 	"github.com/prachin77/pkr/client/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -26,13 +28,12 @@ func main() {
 		utils.ClearScreen()
 
 		switch choice {
-		case "H":
-			cmd.ShowCommands()
 		case "V":
-			utils.StartVirtualTerminal()
+			StartVirtualTerminal()
 		case "Q":
 			fmt.Println("Terminating ...")
-			return
+			time.Sleep(time.Second)
+			os.Exit(0)
 		default:
 			fmt.Println("Please select a valid option ...")
 		}
@@ -42,8 +43,31 @@ func main() {
 func displayMenu() {
 	fmt.Println("\nWelcome to Picker")
 	fmt.Println("NOTE :  SAME PC CAN'T HAVE 2 HOSTS/CLIENTS\n")
-	fmt.Println("1. Enter H for HELP")
-	fmt.Println("2. Enter V to start virtual app terminal")
-	fmt.Println("3. Enter Q to QUIT")
+	fmt.Println("Need to enter virtual enviorment to interact with application .")
+	fmt.Println("1. Enter V to start virtual app terminal")
+	fmt.Println("2. Enter Q to QUIT")
 	fmt.Print("Enter your choice : ")
+}
+
+// StartVirtualTerminal starts the virtual app terminal session.
+func StartVirtualTerminal() {
+	var cmdChoice string
+	fmt.Println("Virtual App Terminal Started.... \nType 'exit' to return to the main menu . \nType 'clear' to clear screen . \nType 'H' for Help")
+
+	for {
+		fmt.Print(">> ")
+		fmt.Scanln(&cmdChoice)
+
+		if cmdChoice == "exit" {
+			fmt.Println("Exiting virtual terminal...")
+			return
+		}
+
+		if cmdChoice == "clear" {
+			utils.ClearScreen()
+			continue
+		}
+
+		commands.HandleCommand(cmdChoice)
+	}
 }

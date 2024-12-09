@@ -1,7 +1,9 @@
-package cmd
+package commands
 
 import (
 	"fmt"
+
+	"github.com/prachin77/pkr/client/utils"
 )
 
 func ShowCommands() {
@@ -20,4 +22,31 @@ func ShowCommands() {
 	fmt.Println("   Join an existing pool, checking membership and capacity limits.\n")
 	fmt.Println("7. leavepool <poolname or pool_id>")
 	fmt.Println("   Leave an existing pool and notify the admin if required.\n")
+	fmt.Println("8. getmyipadd")
+	fmt.Println("   Gets your current IP address")
+}
+
+func HandleCommand(cmdChoice string) {
+	switch cmdChoice {
+	case "H":
+		ShowCommands()
+	case "getmyipadd":
+		utils.ShowClientIpAdd()
+	case "startserver":
+		fmt.Println("Starting server...")
+	case "movefile":
+		fmt.Println("Move file command executed...")
+	case "follow":
+		fmt.Println("Following user...")
+	case "unfollow":
+		fmt.Println("Unfollowing user...")
+	case "createpool":
+		fmt.Println("Creating pool...")
+	case "joinpool":
+		fmt.Println("Joining pool...")
+	case "leavepool":
+		fmt.Println("Leaving pool...")
+	default:
+		fmt.Println("Unknown command. Type 'H' for help.")
+	}
 }

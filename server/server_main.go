@@ -26,9 +26,9 @@ func main() {
 	pb.RegisterAuthServiceServer(grpcServer, &authServer{})
 
 	fmt.Println("welcome to server ✌️✌️")
-	fmt.Println("server started at port : ", lis.Addr())
-
+	
 	if err := grpcServer.Serve(lis); err != nil {
 		fmt.Println("Failed to server at port : ", lis.Addr())
 	}
+	fmt.Println("server started at port : ", lis.Addr())
 }
