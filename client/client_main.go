@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"time"
@@ -51,12 +52,13 @@ func displayMenu() {
 
 // StartVirtualTerminal starts the virtual app terminal session.
 func StartVirtualTerminal() {
-	var cmdChoice string
+	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Println("Virtual App Terminal Started.... \nType 'exit' to return to the main menu . \nType 'clear' to clear screen . \nType 'H' for Help")
 
 	for {
 		fmt.Print(">> ")
-		fmt.Scanln(&cmdChoice)
+		scanner.Scan() // Reads the entire input line
+		cmdChoice := scanner.Text()
 
 		if cmdChoice == "exit" {
 			fmt.Println("Exiting virtual terminal...")
