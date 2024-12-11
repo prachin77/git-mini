@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/prachin77/pkr/client/utils"
@@ -9,6 +10,7 @@ import (
 
 func ShowCommands() {
 	fmt.Println("Available Commands:")
+	fmt.Println("NOTE : PLS ENTER ABSOLUTE PATH OF FILE/FOLDER FOR SMOOTH OPERATION\n\n")
 	// fmt.Println("1. start server")
 	// fmt.Println("   Starts the server on this system, turning it into a node that can interact with other systems.\n")
 	fmt.Println("1. movefile <file_path> <username>")
@@ -28,7 +30,7 @@ func ShowCommands() {
 }
 
 func HandleCommand(cmdChoice string) {
-	parts := strings.Fields(cmdChoice) 
+	parts := strings.Fields(cmdChoice)
 	command := parts[0]
 	args := parts[1:]
 
@@ -53,4 +55,10 @@ func HandleCommand(cmdChoice string) {
 func MoveFile(filePath string, username string) {
 	fmt.Println("file path:", filePath)
 	fmt.Println("username:", username)
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		fmt.Println("file or folder doesn't exists in your system\n")
+		fmt.Println("pls specify correct path")
+	} else {
+		fmt.Println("absolute file path : ", filePath)
+	}
 }

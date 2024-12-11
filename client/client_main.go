@@ -57,7 +57,7 @@ func StartVirtualTerminal() {
 
 	for {
 		fmt.Print(">> ")
-		scanner.Scan() // Reads the entire input line
+		scanner.Scan() 
 		cmdChoice := scanner.Text()
 
 		if cmdChoice == "exit" {
