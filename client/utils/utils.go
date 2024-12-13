@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"regexp"
 	"runtime"
 )
 
@@ -21,22 +20,4 @@ func ClearScreen() {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Run()
-}
-
-func ShowClientIpAdd() {
-	cmd := exec.Command("ipconfig")
-	output, err := cmd.Output()
-	if err != nil {
-		fmt.Println("Error fetching client IP address:", err)
-		return
-	}
-
-	re := regexp.MustCompile(`IPv4 Address.*?: (\d+\.\d+\.\d+\.\d+)`)
-	matches := re.FindSubmatch(output)
-
-	if len(matches) > 1 {
-		fmt.Println("Your IP Address is:", string(matches[1]))
-	} else {
-		fmt.Println("IPv4 Address not found.")
-	}
 }
