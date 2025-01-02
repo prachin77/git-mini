@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+// Allows Empty Messages
+// import "google/protobuf/empty.proto";
+
+option go_package = "/pb";
+
+service BackgroundService{
+    // Establish / Register new User to a Workspace
+    rpc InitNewWorkSpaceConnection (InitRequest)  returns (InitResponse);
+}
+
+
+message InitRequest{
+    string workspace_name = 1;
+    string username = 2;
+    string password = 3;
+    string port = 4;
+
+    // may be later implement public key for encryption & decryption for security purposes
+    // bytes public_key = 5;
+}
+
+message InitResponse{
+    int32 response = 1;
+    int32 port = 2;
+}

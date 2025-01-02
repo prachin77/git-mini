@@ -4,5 +4,8 @@ init:
 tidy:
 	go mod tidy
 
-auth_pb_files:
-	protoc --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative proto/auth.proto
+pb_files:
+	protoc --proto_path=proto \
+	       --go_out=paths=source_relative:pb \
+	       --go-grpc_out=paths=source_relative:pb \
+	       proto/background_service.proto

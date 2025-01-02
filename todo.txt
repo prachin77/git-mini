@@ -1,0 +1,5 @@
+Questions to ask :
+1. main.go file in server acts as a host in p2p & not a centralized server
+2. where is AuthManager in main.go(client)
+3. in init_grpc.go(client) what are fileWatcherClient & authClient & what's their job
+
