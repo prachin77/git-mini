@@ -74,11 +74,12 @@ func CreateUserConfigFile() bool {
 
 // 1. writes username , port , ip_address in it 
 func WriteInUserConfigFile(user_config_file_data *models.UserConfig) error {
-	jsonbytes , err := json.Marshal(user_config_file_data)
-	if err != nil{
-		fmt.Println("unable to parse name into json : ",err)
-		return err
-	}
+	// Marshal the data into a pretty-printed JSON format
+    jsonbytes, err := json.MarshalIndent(user_config_file_data, "", "    ")
+    if err != nil {
+        fmt.Println("unable to parse name into json: ", err)
+        return err
+    }
 
 	err = os.WriteFile(ROOT_DIR + "/userconfig.json",jsonbytes,0777)
 	if err != nil{
