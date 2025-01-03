@@ -24,33 +24,38 @@ var (
 // 2. create userconfig.json file inside config folder
 // 3. setup username, password, private & public key, port in user config file
 func Setup(background_service_client pb.BackgroundServiceClient) {
-    fmt.Printf("Enter username: ")
-    fmt.Scan(&user_config.Username)
+	if UserConfigFileExists() {
+		err := ReadFromUserConfigFile(&user_config)
+		if err == nil {
+			fmt.Println("User is already set up! Welcome back, " + user_config.Username)
+			return
+		} else {
+			fmt.Println("Error reading user configuration file:", err)
+			return
+		}
+	}
 
-    fmt.Println("Hello " + user_config.Username + " setting up your system ...\n")
-    fmt.Println("This may take a few seconds, so be patient ...")
-    time.Sleep(1 * time.Second)
+	fmt.Printf("Enter username: ")
+	fmt.Scan(&user_config.Username)
 
-    configFolderExists := CheckUserConfigFolderExists()
-    if configFolderExists {
-        if UserConfigFileExists() {
-            fmt.Println("User is already set up!")
-            return
-        }
-    }
+	fmt.Println("Hello " + user_config.Username + " setting up your system ...\n")
+	fmt.Println("This may take a few seconds, so be patient ...")
+	time.Sleep(1 * time.Second)
 
-    if !configFolderExists {
-        fmt.Println("Creating configuration folder and user file ...")
-        if configFileCreated := CreateUserConfigFile(); configFileCreated {
-            WriteInUserConfigFile(&user_config)
-        }
-    } else {
-        fmt.Println("Creating user configuration file ...")
-        if !UserConfigFileExists() {
-            WriteInUserConfigFile(&user_config)
-        }
-    }
-    fmt.Println("~ created user: ", user_config.Username)
+	configFolderExists := CheckUserConfigFolderExists()
+	if !configFolderExists {
+		fmt.Println("Creating configuration folder ...")
+		if !CreateConfigFolder() {
+			fmt.Println("Failed to create configuration folder. Exiting setup.")
+			return
+		}
+	}
+
+	fmt.Println("Creating user configuration file ...")
+	if CreateUserConfigFile() {
+		WriteInUserConfigFile(&user_config)
+	}
+	fmt.Println("~ created user: ", user_config.Username)
 }
 
 // 1. both sender & receiver first have to setup their system
@@ -91,6 +96,15 @@ func UserConfigFileExists() bool {
 }
 
 // 1. creates config file inside config folder
+func CreateConfigFolder() bool {
+	err := os.Mkdir(ROOT_DIR, 0777)
+	if err != nil {
+		fmt.Println("Failed to create config folder:", err)
+		return false
+	}
+	return true
+}
+
 func CreateUserConfigFile() bool {
 	file, err := os.Create(USER_CONFIG_FILE)
 	if err != nil {
@@ -103,16 +117,29 @@ func CreateUserConfigFile() bool {
 
 // 1. writes username, port, ip_address in it
 func WriteInUserConfigFile(user_config_file_data *models.UserConfig) error {
-	// Marshal the data into a pretty-printed JSON format
 	jsonBytes, err := json.MarshalIndent(user_config_file_data, "", "    ")
 	if err != nil {
 		fmt.Println("Unable to parse user data into JSON:", err)
 		return err
 	}
 
-	err = os.WriteFile(ROOT_DIR+"\\userconfig.json", jsonBytes, 0777)
+	err = os.WriteFile(USER_CONFIG_FILE, jsonBytes, 0777)
 	if err != nil {
 		fmt.Println("Unable to write into user config file:", err)
+		return err
+	}
+	return nil
+}
+
+// 1. reads username, port, ip_address from userconfig.json file
+func ReadFromUserConfigFile(user_config_file_data *models.UserConfig) error {
+	jsonBytes, err := os.ReadFile(USER_CONFIG_FILE)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(jsonBytes, user_config_file_data)
+	if err != nil {
 		return err
 	}
 	return nil
