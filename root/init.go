@@ -13,6 +13,7 @@ import (
 
 var (
 	sending_workspace = models.SendWorkSpaceFolder{}
+	log_file_msg string
 )
 
 // 1. register/host a folder/workspace to send into userconfig file
@@ -39,6 +40,16 @@ func Init(background_service_client pb.BackgroundServiceClient) {
 		fmt.Println("Initializing workspace , wait a moment ...")
 		InitalizeWorkspace(&sending_workspace)
 	}
+	
+	log_file_msg := "Workspace "+sending_workspace.Workspace_Name+" initialized on "+sending_workspace.Workspace_Hosted_Date+"\n"
+
+	log_file_created := CreateLogFile()
+	if log_file_created{
+		if err := WriteInLogFile(log_file_msg); err == nil {
+			fmt.Println("successfully written in log file !")
+		}
+	}
+
 	fmt.Println("initialized workspaces : ", workspaces)
 }
 
@@ -62,7 +73,7 @@ func CheckWorkSpaceInUserConfigFile(sending_workspace *models.SendWorkSpaceFolde
 	}
 
 	for _, workspace := range user_config.SendWorkSpaces {
-		fmt.Printf("Existing workspace: %+v\n", workspace)
+		fmt.Printf("Existing workspace : %+v\n", workspace)
 	}
 
 	return true, user_config.SendWorkSpaces
@@ -95,6 +106,32 @@ func InitalizeWorkspace(sending_workspace *models.SendWorkSpaceFolder) {
 		fmt.Println("error writing updated data into user config file : ",err)
 		return
 	}
-
 	fmt.Println("Workspace initialized and added to the configuration successfully!")
+}
+
+func CreateLogFile() bool {
+	file , err := os.Create(LOG_FILE)
+	if err != nil{
+		fmt.Println("failed to create log file : ")
+		return false
+	}
+	defer file.Close()
+	fmt.Println("log file successfully created ")
+	return true
+}
+
+func WriteInLogFile(log_file_msg string) error {
+	file , err := os.OpenFile(LOG_FILE , os.O_APPEND,os.ModePerm)
+	if err != nil{
+		fmt.Println("error opening log file , issue in path : ",err)
+		return err
+	}
+	defer file.Close()
+
+	_ , err = file.WriteString(log_file_msg)
+	if err != nil{
+		fmt.Println("error writing in log file : ",err)
+		return err
+	}
+	return nil
 }
