@@ -31,29 +31,32 @@ func main() {
 	background_service_client := pb.NewBackgroundServiceClient(conn)
 	fmt.Println(background_service_client)
 
-	DisplayMenu()
+	for {
+		DisplayMenu()
 
-	fmt.Printf("Enter choice : ")
-	fmt.Scan(&choice)
+		fmt.Printf("Enter choice : ")
+		fmt.Scan(&choice)
 
-	utils.ClearScreen()
+		utils.ClearScreen()
 
-	switch choice {
-	case "S":
-		// setup func
-		root.Setup(background_service_client)
-	case "Q":
-		fmt.Println("Terminating ...")
-		time.Sleep(2 * time.Second)
-		os.Exit(0)
-	default:
-		fmt.Println("pls select a valid choice\n")
+		switch choice {
+		case "S":
+			root.Setup(background_service_client)
+		case "I":
+			root.Init(background_service_client)
+		case "Q":
+			fmt.Println("Terminating ...")
+			time.Sleep(2 * time.Second)
+			os.Exit(0)
+		default:
+			fmt.Println("pls select a valid choice")
+		}
 	}
-
 }
 
 func DisplayMenu() {
-	fmt.Println("--------------  WELCOME  --------------\n")
-	fmt.Println("Enter S To Setup Config Files\n")
-	fmt.Println("Enter Q To Quit\n")
+	fmt.Println("--------------  WELCOME  --------------")
+	fmt.Println("Enter S To Setup Service Configuration")
+	fmt.Println("Enter I To Initialize/Install Workspace")
+	fmt.Println("Enter Q To Quit")
 }

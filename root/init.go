@@ -1,8 +1,11 @@
 package root
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/prachin77/pkr/models"
 	"github.com/prachin77/pkr/pb"
@@ -12,30 +15,86 @@ var (
 	sending_workspace = models.SendWorkSpaceFolder{}
 )
 
-// 1. register a folder / workspace to send / export
-// 2. create log file outside config folder 
-// 3. every user who's hosting a folder / workspace will have a log file 
+// 1. register/host a folder/workspace to send into userconfig file
+// 2. create log file inside config folder
+// 3. every user who's hosting a folder / workspace will have a log file
 func Init(background_service_client pb.BackgroundServiceClient) {
 	fmt.Print("Enter Workspace Password : ")
 	fmt.Scan(&sending_workspace.Workspace_Password)
 
-	// get current working directory path 
-	pwd , err := os.Getwd()
-	if err != nil{
-		fmt.Println("failed to retrive current working directory path : ",err)
+	// get current working directory path
+	pwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("failed to retrive current working directory path : ", err)
 		return
-	}else{
-		fmt.Println("current working directory path : ",pwd)
+	} else {
+		fmt.Println("current working directory path : ", pwd)
 	}
 
-	// get directory name 
-	
+	sending_workspace.Workspace_Path = pwd
+	sending_workspace.Workspace_Name = filepath.Base(pwd)
+
+	workspace_initalized, workspaces := CheckWorkSpaceInUserConfigFile(&sending_workspace)
+	if !workspace_initalized {
+		fmt.Println("Initializing workspace , wait a moment ...")
+		InitalizeWorkspace(&sending_workspace)
+	}
+	fmt.Println("initialized workspaces : ", workspaces)
 }
 
-// 1. checks if workspace is already Initialized or not 
-// 2. if present then do nothing
-// 3. if not then write into config file
-func CheckWorkSpaceInUserConfigFile() bool {
+// 1. checks if workspace is already Initialized or not -> present in send workspace slice in userconfig file
+func CheckWorkSpaceInUserConfigFile(sending_workspace *models.SendWorkSpaceFolder) (bool, []models.SendWorkSpaceFolder) {
+	data, err := os.ReadFile(USER_CONFIG_FILE)
+	if err != nil {
+		fmt.Println("error reading from user config file:", err)
+		return false, nil
+	}
 
-	return false
+	if err := json.Unmarshal(data, &user_config); err != nil {
+		fmt.Println("error unmarshalling data:", err)
+		return false, nil
+	}
+
+	// Check if SendWorkSpaces slice is empty
+	if len(user_config.SendWorkSpaces) == 0 {
+		fmt.Println("No workspaces initialized.")
+		return false, nil
+	}
+
+	for _, workspace := range user_config.SendWorkSpaces {
+		fmt.Printf("Existing workspace: %+v\n", workspace)
+	}
+
+	return true, user_config.SendWorkSpaces
+}
+
+func InitalizeWorkspace(sending_workspace *models.SendWorkSpaceFolder) {
+	sending_workspace.Workspace_Hosted_Date = time.Now().Format("2006-01-02")
+
+	data , err := os.ReadFile(USER_CONFIG_FILE)
+	if err != nil{
+		fmt.Println("error reading user config file : ",err)
+		return
+	}	
+	if err := json.Unmarshal(data , &user_config); err != nil{
+		fmt.Println("error unmarshalling data:", err)
+		return
+	}
+
+	// Append the new workspace to the SendWorkSpaces slice
+	user_config.SendWorkSpaces = append(user_config.SendWorkSpaces, *sending_workspace)
+
+	updatedData , err := json.MarshalIndent(user_config, "", "    ")
+	if err!= nil{
+		fmt.Println("error marshalling updated user config data : ",err)
+		return
+	}
+
+	err = os.WriteFile(USER_CONFIG_FILE , updatedData , os.ModePerm)
+	if err != nil{
+		fmt.Println("error writing updated data into user config file : ",err)
+		return
+	}
+
+	fmt.Println("Workspace initialized and added to the configuration successfully!")
 }

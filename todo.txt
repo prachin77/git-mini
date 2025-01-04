@@ -1,5 +1,12 @@
-Questions to ask :
-1. main.go file in server acts as a host in p2p & not a centralized server
-2. where is AuthManager in main.go(client)
-3. in init_grpc.go(client) what are fileWatcherClient & authClient & what's their job
+Questions to ask ?
+1. what if a user after initializing a folder/workspace he shuts down PC 
+   the folder is now in config file 
+   now every time sender initalizes that folder msg'll be like already initalized 
 
+1. Setup
+    a. [] generate & store public & private keys in respective files
+    b. [] store that file inside config folder
+    c. [] store port address on which application is running
+
+
+ 

@@ -27,7 +27,7 @@ func Setup(background_service_client pb.BackgroundServiceClient) {
 	if UserConfigFileExists() {
 		err := ReadFromUserConfigFile(&user_config)
 		if err == nil {
-			fmt.Println("User is already set up! Welcome back, " + user_config.Username)
+			fmt.Println("User is already set up! Welcome back : " + user_config.Username)
 			return
 		} else {
 			fmt.Println("Error reading user configuration file:", err)

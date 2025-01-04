@@ -19,15 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	BackgroundService_InitNewWorkSpaceConnection_FullMethodName = "/BackgroundService/InitNewWorkSpaceConnection"
+	BackgroundService_InitWorkspace_FullMethodName = "/BackgroundService/InitWorkspace"
 )
 
 // BackgroundServiceClient is the client API for BackgroundService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BackgroundServiceClient interface {
-	// Establish / Register new User to a Workspace
-	InitNewWorkSpaceConnection(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*InitResponse, error)
+	// Initialiize new folder/workspace into config file
+	InitWorkspace(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*InitResponse, error)
 }
 
 type backgroundServiceClient struct {
@@ -38,10 +38,10 @@ func NewBackgroundServiceClient(cc grpc.ClientConnInterface) BackgroundServiceCl
 	return &backgroundServiceClient{cc}
 }
 
-func (c *backgroundServiceClient) InitNewWorkSpaceConnection(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*InitResponse, error) {
+func (c *backgroundServiceClient) InitWorkspace(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*InitResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(InitResponse)
-	err := c.cc.Invoke(ctx, BackgroundService_InitNewWorkSpaceConnection_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, BackgroundService_InitWorkspace_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,8 +52,8 @@ func (c *backgroundServiceClient) InitNewWorkSpaceConnection(ctx context.Context
 // All implementations must embed UnimplementedBackgroundServiceServer
 // for forward compatibility.
 type BackgroundServiceServer interface {
-	// Establish / Register new User to a Workspace
-	InitNewWorkSpaceConnection(context.Context, *InitRequest) (*InitResponse, error)
+	// Initialiize new folder/workspace into config file
+	InitWorkspace(context.Context, *InitRequest) (*InitResponse, error)
 	mustEmbedUnimplementedBackgroundServiceServer()
 }
 
@@ -64,8 +64,8 @@ type BackgroundServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedBackgroundServiceServer struct{}
 
-func (UnimplementedBackgroundServiceServer) InitNewWorkSpaceConnection(context.Context, *InitRequest) (*InitResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method InitNewWorkSpaceConnection not implemented")
+func (UnimplementedBackgroundServiceServer) InitWorkspace(context.Context, *InitRequest) (*InitResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InitWorkspace not implemented")
 }
 func (UnimplementedBackgroundServiceServer) mustEmbedUnimplementedBackgroundServiceServer() {}
 func (UnimplementedBackgroundServiceServer) testEmbeddedByValue()                           {}
@@ -88,20 +88,20 @@ func RegisterBackgroundServiceServer(s grpc.ServiceRegistrar, srv BackgroundServ
 	s.RegisterService(&BackgroundService_ServiceDesc, srv)
 }
 
-func _BackgroundService_InitNewWorkSpaceConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _BackgroundService_InitWorkspace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(InitRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BackgroundServiceServer).InitNewWorkSpaceConnection(ctx, in)
+		return srv.(BackgroundServiceServer).InitWorkspace(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: BackgroundService_InitNewWorkSpaceConnection_FullMethodName,
+		FullMethod: BackgroundService_InitWorkspace_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BackgroundServiceServer).InitNewWorkSpaceConnection(ctx, req.(*InitRequest))
+		return srv.(BackgroundServiceServer).InitWorkspace(ctx, req.(*InitRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -114,8 +114,8 @@ var BackgroundService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*BackgroundServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "InitNewWorkSpaceConnection",
-			Handler:    _BackgroundService_InitNewWorkSpaceConnection_Handler,
+			MethodName: "InitWorkspace",
+			Handler:    _BackgroundService_InitWorkspace_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
