@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	port = ":8080"
 	ROOT_DIR         = "config"
 	USER_CONFIG_FILE = ROOT_DIR + "\\userconfig.json"
 	PRIVATE_KEY_FILE = ROOT_DIR + "\\privatekey.pem"
@@ -40,6 +41,8 @@ func Setup(background_service_client pb.BackgroundServiceClient) {
 
 	fmt.Printf("Enter username: ")
 	fmt.Scan(&user_config.Username)
+
+	user_config.Port = port
 
 	fmt.Println("Hello " + user_config.Username + " setting up your system ...\n")
 	fmt.Println("This may take a few seconds, so be patient ...")
