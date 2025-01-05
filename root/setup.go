@@ -8,11 +8,14 @@ import (
 
 	"github.com/prachin77/pkr/models"
 	pb "github.com/prachin77/pkr/pb"
+	"github.com/prachin77/pkr/security"
 )
 
 const (
 	ROOT_DIR         = "config"
 	USER_CONFIG_FILE = ROOT_DIR + "\\userconfig.json"
+	PRIVATE_KEY_FILE = ROOT_DIR + "\\privatekey.pem"
+	PUBLIC_KEY_FILE  = ROOT_DIR + "\\publickey.pem"
 	LOG_FILE         = ROOT_DIR + "\\logs.txt"
 )
 
@@ -51,11 +54,28 @@ func Setup(background_service_client pb.BackgroundServiceClient) {
 		}
 	}
 
-	fmt.Println("Creating user configuration file ...")
+	fmt.Println("Creating user configuration file !")
 	if CreateUserConfigFile() {
 		WriteInUserConfigFile(&user_config)
 	}
-	fmt.Println("~ created user: ", user_config.Username)
+
+	private_key, public_key, err := security.GenerateRSAKeys()
+	if private_key == nil || public_key == nil || err != nil {
+		fmt.Println("error generating public & private keys:", err)
+		return
+	}
+
+	if err = security.StorePrivateKeys(private_key, PRIVATE_KEY_FILE); err != nil {
+		fmt.Println("error storing private keys in file:", err)
+		return
+	}
+
+	if err = security.StorePublicKeys(public_key, PUBLIC_KEY_FILE); err != nil {
+		fmt.Println("error storing public keys in file:", err)
+		return
+	}
+
+	fmt.Println("~ created user : ", user_config.Username)
 }
 
 // 1. both sender & receiver first have to setup their system
@@ -68,13 +88,13 @@ func CheckUserConfigFolderExists() bool {
 		fmt.Println("Config folder already exists")
 		return true
 	} else if os.IsNotExist(err) {
-		fmt.Println("Config folder doesn't exist, creating it ...")
+		fmt.Println("Config folder doesn't exist, creating it !")
 		err := os.Mkdir(ROOT_DIR, 0777)
 		if err != nil {
 			fmt.Println("Failed to create config folder:", err)
 			return false
 		}
-		fmt.Println("Config folder successfully created!")
+		fmt.Println("Config folder created successfully ...")
 		return true
 	} else {
 		fmt.Println("Error checking config folder existence:", err)
@@ -112,6 +132,7 @@ func CreateUserConfigFile() bool {
 		return false
 	}
 	defer file.Close()
+	fmt.Println("user config file created successfully ...")
 	return true
 }
 

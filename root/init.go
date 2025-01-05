@@ -41,7 +41,7 @@ func Init(background_service_client pb.BackgroundServiceClient) {
 		InitalizeWorkspace(&sending_workspace)
 	}
 	
-	log_file_msg := "Workspace "+sending_workspace.Workspace_Name+" initialized on "+sending_workspace.Workspace_Hosted_Date+"\n"
+	log_file_msg = "Workspace "+sending_workspace.Workspace_Name+" initialized on "+sending_workspace.Workspace_Hosted_Date+"\n"
 
 	log_file_created := CreateLogFile()
 	if log_file_created{
