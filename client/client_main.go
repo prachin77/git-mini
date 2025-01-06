@@ -44,6 +44,8 @@ func main() {
 			root.Setup(background_service_client)
 		case "I":
 			root.Init(background_service_client)
+		case "C":
+			root.Clone(background_service_client)
 		case "Q":
 			fmt.Println("Terminating ...")
 			time.Sleep(2 * time.Second)
@@ -58,5 +60,6 @@ func DisplayMenu() {
 	fmt.Println("--------------  WELCOME  --------------")
 	fmt.Println("Enter S To Setup Service Configuration")
 	fmt.Println("Enter I To Initialize/Install Workspace")
+	fmt.Println("Enter C To Clone Workspace")
 	fmt.Println("Enter Q To Quit")
 }

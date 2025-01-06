@@ -1,9 +1,9 @@
 // THIS IS BASE FILE OR FILE THAT ACTS LIKE SERVER WHICH SENDS DATA To CLIENT IN P2P ARCHITECHTURE
-// SENDER -> SERVER 
-// 	   -> SENDS DATA 
+// SENDER -> SERVER
+// 	   -> SENDS DATA
 
 // CLIENT -> RECIEVER
-// 	   -> RECIEVES DATA 
+// 	   -> RECIEVES DATA
 
 package main
 
@@ -12,6 +12,7 @@ import (
 	"net"
 
 	"github.com/prachin77/pkr/pb"
+	roothandler "github.com/prachin77/pkr/server/root_handler"
 	"github.com/prachin77/pkr/utils"
 	"google.golang.org/grpc"
 )
@@ -20,9 +21,9 @@ const (
 	port = ":8080"
 )
 
-type background_service_server struct {
-	pb.UnimplementedBackgroundServiceServer
-}
+// type background_service_server struct {
+// 	pb.UnimplementedBackgroundServiceServer
+// }
 
 func main() {
 	lis, err := net.Listen("tcp", port)
@@ -33,7 +34,10 @@ func main() {
 		// for colored & structured logging into terminal
 		grpc.UnaryInterceptor(utils.StructuredLoggerInterceptor()),
 	)
-	pb.RegisterBackgroundServiceServer(grpcServer , &background_service_server{})
+	// pb.RegisterBackgroundServiceServer(grpcServer , &background_service_server{})
+
+	background_service_server := &roothandler.BackgroundServiceServer{}
+	pb.RegisterBackgroundServiceServer(grpcServer , background_service_server)
 
 	fmt.Println("welcome to server ✌️✌️")
 	fmt.Println("server running on port : ", lis.Addr())

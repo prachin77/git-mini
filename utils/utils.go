@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/prachin77/pkr/root"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
 )
@@ -91,4 +92,13 @@ func ClearScreen() {
 	// Execute the clear command
 	cmd.Stdout = os.Stdout
 	cmd.Run()
+}
+
+func GetHostPublicKey() (string , error) {
+	public_key_data , err := os.ReadFile(root.PUBLIC_KEY_FILE)
+	if err != nil{
+		return "" , err
+	}
+
+	return string(public_key_data) , nil
 }

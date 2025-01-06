@@ -3,8 +3,10 @@ package models
 type UserConfig struct {
 	Username       string                `json:"username"`
 	Port           string                `json:"port"`
-	Ip_Address     string                `json:"ip_address"`
 	SendWorkSpaces []SendWorkSpaceFolder `json:"send_workspaces"`
+
+	// later when dynamic IPs are stored , bcz right now we're manually entering IPs
+	// Ip_Address     string                `json:"ip_address"`
 }
 
 // workspace hosted by a user to send to connected clients who are retrieving data from the folder 

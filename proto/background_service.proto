@@ -1,13 +1,16 @@
 syntax = "proto3";
 
 // Allows Empty Messages
-// import "google/protobuf/empty.proto";
+import "google/protobuf/empty.proto";
 
 option go_package = "/pb";
 
 service BackgroundService{
     // Initialiize new folder/workspace into config file 
     rpc InitWorkspace (InitRequest)  returns (InitResponse);
+
+    // Gets Host PC's (from which we're cloning files) public Keys 
+    rpc GetHostPcPublicKey (google.protobuf.Empty) returns (PublicKey);
 }
 
 
@@ -16,7 +19,7 @@ message InitRequest{
     string workspace_name = 2;
     string workspace_password = 4;
     string port = 5;
-    
+    bytes public_key = 6;
     // string username = 3;
     // may be later implement public key for encryption & decryption for security purposes
     // bytes public_key = 5;
@@ -24,5 +27,9 @@ message InitRequest{
 
 message InitResponse{
     bool isDirInitialized = 1;
-    int32 port = 3;
+    int32 port = 2;
+}
+
+message PublicKey {
+    bytes public_key = 1;
 }

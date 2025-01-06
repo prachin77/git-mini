@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,7 +20,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	BackgroundService_InitWorkspace_FullMethodName = "/BackgroundService/InitWorkspace"
+	BackgroundService_InitWorkspace_FullMethodName      = "/BackgroundService/InitWorkspace"
+	BackgroundService_GetHostPcPublicKey_FullMethodName = "/BackgroundService/GetHostPcPublicKey"
 )
 
 // BackgroundServiceClient is the client API for BackgroundService service.
@@ -28,6 +30,8 @@ const (
 type BackgroundServiceClient interface {
 	// Initialiize new folder/workspace into config file
 	InitWorkspace(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*InitResponse, error)
+	// Gets Host PC's (from which we're cloning files) public Keys
+	GetHostPcPublicKey(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PublicKey, error)
 }
 
 type backgroundServiceClient struct {
@@ -48,12 +52,24 @@ func (c *backgroundServiceClient) InitWorkspace(ctx context.Context, in *InitReq
 	return out, nil
 }
 
+func (c *backgroundServiceClient) GetHostPcPublicKey(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PublicKey, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PublicKey)
+	err := c.cc.Invoke(ctx, BackgroundService_GetHostPcPublicKey_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BackgroundServiceServer is the server API for BackgroundService service.
 // All implementations must embed UnimplementedBackgroundServiceServer
 // for forward compatibility.
 type BackgroundServiceServer interface {
 	// Initialiize new folder/workspace into config file
 	InitWorkspace(context.Context, *InitRequest) (*InitResponse, error)
+	// Gets Host PC's (from which we're cloning files) public Keys
+	GetHostPcPublicKey(context.Context, *emptypb.Empty) (*PublicKey, error)
 	mustEmbedUnimplementedBackgroundServiceServer()
 }
 
@@ -66,6 +82,9 @@ type UnimplementedBackgroundServiceServer struct{}
 
 func (UnimplementedBackgroundServiceServer) InitWorkspace(context.Context, *InitRequest) (*InitResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InitWorkspace not implemented")
+}
+func (UnimplementedBackgroundServiceServer) GetHostPcPublicKey(context.Context, *emptypb.Empty) (*PublicKey, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHostPcPublicKey not implemented")
 }
 func (UnimplementedBackgroundServiceServer) mustEmbedUnimplementedBackgroundServiceServer() {}
 func (UnimplementedBackgroundServiceServer) testEmbeddedByValue()                           {}
@@ -106,6 +125,24 @@ func _BackgroundService_InitWorkspace_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BackgroundService_GetHostPcPublicKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BackgroundServiceServer).GetHostPcPublicKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BackgroundService_GetHostPcPublicKey_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BackgroundServiceServer).GetHostPcPublicKey(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BackgroundService_ServiceDesc is the grpc.ServiceDesc for BackgroundService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -116,6 +153,10 @@ var BackgroundService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "InitWorkspace",
 			Handler:    _BackgroundService_InitWorkspace_Handler,
+		},
+		{
+			MethodName: "GetHostPcPublicKey",
+			Handler:    _BackgroundService_GetHostPcPublicKey_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

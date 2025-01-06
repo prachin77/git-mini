@@ -4,9 +4,15 @@ Questions to ask ?
    now every time sender initalizes that folder msg'll be like already initalized 
 
 1. Setup
-    a. [] generate & store public & private keys in respective files
-    b. [] store that file inside config folder
-    c. [] store port address on which application is running
+   a. [done] generate & store public & private keys in respective files
+   b. [done] store that file inside config folder 
+   c. [done] store port address on which application is running
 
+2. Security
+   a . [] create another file to generate hash
 
- 
+3. Init
+   a. [] for now workspace path & name is current directory but user should 
+         also be able to host any other folder from PC
+   
+   
