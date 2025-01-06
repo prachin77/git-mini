@@ -19,7 +19,7 @@ type BackgroundServiceServer struct {
 }
 
 func (s *BackgroundServiceServer) GetHostPcPublicKey(ctx context.Context, req *emptypb.Empty) (*pb.PublicKey, error) {
-	public_key_data, err := utils.GetHostPublicKey()
+	public_key_data, host_public_key_file_path , err := utils.GetHostPublicKey()
 	if err != nil {
 		fmt.Println("Error retrieving host public key:", err)
 		return nil, err
@@ -34,6 +34,9 @@ func (s *BackgroundServiceServer) GetHostPcPublicKey(ctx context.Context, req *e
 	} else {
 		fmt.Println("Client IP address : ", p.Addr.String())
 	}
+
+	fmt.Println("public key retrived successfully ...")
+	fmt.Println("host public key file path : ",host_public_key_file_path)
 	return &pb.PublicKey{
 		PublicKey: []byte(public_key_data),
 	}, nil

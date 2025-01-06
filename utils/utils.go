@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -94,11 +95,16 @@ func ClearScreen() {
 	cmd.Run()
 }
 
-func GetHostPublicKey() (string , error) {
+func GetHostPublicKey() (string , string , error) {
 	public_key_data , err := os.ReadFile(root.PUBLIC_KEY_FILE)
 	if err != nil{
-		return "" , err
+		return "" , "" , err
 	}
 
-	return string(public_key_data) , nil
+	path , err := filepath.Abs(root.PUBLIC_KEY_FILE)
+	if err != nil{
+		fmt.Println("error retrieving host public key file path : ",err)
+		return "" , "" , err
+	}
+	return string(public_key_data) , path , nil
 }
