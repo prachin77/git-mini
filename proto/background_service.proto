@@ -21,8 +21,6 @@ message InitRequest{
     string port = 5;
     bytes public_key = 6;
     // string username = 3;
-    // may be later implement public key for encryption & decryption for security purposes
-    // bytes public_key = 5;
 }
 
 message InitResponse{
@@ -32,4 +30,5 @@ message InitResponse{
 
 message PublicKey {
     bytes public_key = 1;
+    string public_key_filepath = 2;
 }

@@ -3,6 +3,8 @@ package root
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/prachin77/pkr/pb"
@@ -32,7 +34,26 @@ func Clone(background_service_client pb.BackgroundServiceClient) {
 		return
 	}
 
+	my_public_key_filepath := GetClientPublicKeyFilepath()
 	
+	my_public_key , err := os.ReadFile(my_public_key_filepath)
+	if err != nil{
+		fmt.Println("failed to read client public key !")
+		return
+	}
+	
+	fmt.Println("host public key : ",res.PublicKey)
+	fmt.Println("client public key : ",my_public_key)
+	fmt.Println("client public key file path : ",my_public_key_filepath)
+	fmt.Println("host public key file path : ",res.PublicKeyFilepath)
+}
 
-	fmt.Println("response : ",res)
+func GetClientPublicKeyFilepath() (string) {
+	my_public_key_filepath , err := filepath.Abs("./config/publickey.pem")
+	if err != nil{
+		fmt.Println("error retrieving client public key file path !")
+		return "" 
+	}else{
+		return my_public_key_filepath 
+	}
 }

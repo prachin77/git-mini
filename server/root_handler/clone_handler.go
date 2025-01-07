@@ -36,9 +36,9 @@ func (s *BackgroundServiceServer) GetHostPcPublicKey(ctx context.Context, req *e
 	}
 
 	fmt.Println("public key retrived successfully ...")
-	fmt.Println("host public key file path : ",host_public_key_file_path)
 	return &pb.PublicKey{
 		PublicKey: []byte(public_key_data),
+		PublicKeyFilepath: host_public_key_file_path,
 	}, nil
- }
+}
  
