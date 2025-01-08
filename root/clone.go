@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/prachin77/pkr/pb"
+	"github.com/prachin77/pkr/security"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -41,11 +42,18 @@ func Clone(background_service_client pb.BackgroundServiceClient) {
 		fmt.Println("failed to read client public key !")
 		return
 	}
+
+	encrypted_password , err := security.EncryptWorkspacePassword(&sending_workspace , string(res.PublicKey))
+	if err != nil {
+		fmt.Println("Unable to encrypt workspace password:", err)
+		return
+	}
 	
 	fmt.Println("host public key : ",res.PublicKey)
 	fmt.Println("client public key : ",my_public_key)
 	fmt.Println("client public key file path : ",my_public_key_filepath)
 	fmt.Println("host public key file path : ",res.PublicKeyFilepath)
+	fmt.Println("encrypted workspace password : ",encrypted_password)
 }
 
 func GetClientPublicKeyFilepath() (string) {

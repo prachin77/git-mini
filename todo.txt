@@ -3,6 +3,9 @@ Questions to ask ?
    the folder is now in config file 
    now every time sender initalizes that folder msg'll be like already initalized 
 
+2. are host PC public & private keys = client PC's public & private keys 
+   what does init func do in clone  
+
 1. Setup
    a. [done] generate & store public & private keys in respective files
    b. [done] store that file inside config folder 
