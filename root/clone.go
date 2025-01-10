@@ -69,7 +69,11 @@ func Clone(background_service_client pb.BackgroundServiceClient) {
 	fmt.Println("client public key file path : ", my_public_key_filepath)
 	fmt.Println("host public key file path : ", res.PublicKeyFilepath)
 	fmt.Println("encrypted workspace password : ", encrypted_password)
-	fmt.Println("response of connection to workspace to be cloned : ", init_res)
+	fmt.Println("\nresponse of connection to workspace to be cloned ... ")
+	fmt.Println("workspace path : ",init_res.WorkspacePath)
+	fmt.Println("workspace hosted date : ",init_res.WorkspaceHostedDate)
+	fmt.Println("username : ",init_res.Username)
+	fmt.Println("workspace hosted port : ",init_res.Port)
 }
 
 func GetClientPublicKeyFilepath() string {

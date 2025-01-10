@@ -24,8 +24,9 @@ message InitRequest{
 
 message InitResponse{
     string workspace_path = 1;
-    int32 port = 2;
+    string port = 2;
     string username = 3;
+    string workspace_hosted_date = 4;
 }
 
 message PublicKey {
