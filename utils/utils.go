@@ -11,7 +11,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/prachin77/pkr/root"
+	"github.com/prachin77/pkr/models"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
 )
@@ -95,16 +95,31 @@ func ClearScreen() {
 	cmd.Run()
 }
 
-func GetHostPublicKey() (string , string , error) {
-	public_key_data , err := os.ReadFile(root.PUBLIC_KEY_FILE)
-	if err != nil{
-		return "" , "" , err
+func GetHostPublicKey() (string, string, error) {
+	public_key_data, err := os.ReadFile(models.PUBLIC_KEY_FILE)
+	if err != nil {
+		return "", "", err
 	}
 
-	path , err := filepath.Abs(root.PUBLIC_KEY_FILE)
-	if err != nil{
-		fmt.Println("error retrieving host public key file path : ",err)
-		return "" , "" , err
+	path, err := filepath.Abs(models.PUBLIC_KEY_FILE)
+	if err != nil {
+		fmt.Println("error retrieving host public key file path : ", err)
+		return "", "", err
 	}
-	return string(public_key_data) , path , nil
+	return string(public_key_data), path, nil
+}
+
+func GetHostPrivateKeys() (string, string, error) {
+	private_key_data, err := os.ReadFile(models.PRIVATE_KEY_FILE)
+	if err != nil {
+		return "", "", err
+	}
+
+	path, err := filepath.Abs(models.PRIVATE_KEY_FILE)
+	if err != nil {
+		fmt.Println("error retrieving host public key file path : ", err)
+		return "", "", err
+	}
+
+	return string(private_key_data), path, nil
 }

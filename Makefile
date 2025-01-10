@@ -5,7 +5,7 @@ tidy:
 	go mod tidy
 
 pb_files:
-	protoc --proto_path=proto \
+	@protoc --proto_path=proto \
 	       --go_out=paths=source_relative:pb \
 	       --go-grpc_out=paths=source_relative:pb \
 	       proto/background_service.proto

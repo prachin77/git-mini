@@ -6,6 +6,9 @@ Questions to ask ?
 2. are host PC public & private keys = client PC's public & private keys 
    what does init func do in clone  
 
+
+
+Git-mini Functions :
 1. Setup
    a. [done] generate & store public & private keys in respective files
    b. [done] store that file inside config folder 
@@ -17,5 +20,5 @@ Questions to ask ?
 3. Init
    a. [] for now workspace path & name is current directory but user should 
          also be able to host any other folder from PC
-   
+   b. [] also check that user entering workspace name & pass is already used or not ?
    

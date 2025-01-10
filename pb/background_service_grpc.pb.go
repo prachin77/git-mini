@@ -20,8 +20,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	BackgroundService_InitWorkspace_FullMethodName      = "/BackgroundService/InitWorkspace"
-	BackgroundService_GetHostPcPublicKey_FullMethodName = "/BackgroundService/GetHostPcPublicKey"
+	BackgroundService_InitWorkspaceConnWithPort_FullMethodName = "/BackgroundService/InitWorkspaceConnWithPort"
+	BackgroundService_GetHostPcPublicKey_FullMethodName        = "/BackgroundService/GetHostPcPublicKey"
 )
 
 // BackgroundServiceClient is the client API for BackgroundService service.
@@ -29,7 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BackgroundServiceClient interface {
 	// Initialiize new folder/workspace into config file
-	InitWorkspace(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*InitResponse, error)
+	InitWorkspaceConnWithPort(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*InitResponse, error)
 	// Gets Host PC's (from which we're cloning files) public Keys
 	GetHostPcPublicKey(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PublicKey, error)
 }
@@ -42,10 +42,10 @@ func NewBackgroundServiceClient(cc grpc.ClientConnInterface) BackgroundServiceCl
 	return &backgroundServiceClient{cc}
 }
 
-func (c *backgroundServiceClient) InitWorkspace(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*InitResponse, error) {
+func (c *backgroundServiceClient) InitWorkspaceConnWithPort(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*InitResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(InitResponse)
-	err := c.cc.Invoke(ctx, BackgroundService_InitWorkspace_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, BackgroundService_InitWorkspaceConnWithPort_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (c *backgroundServiceClient) GetHostPcPublicKey(ctx context.Context, in *em
 // for forward compatibility.
 type BackgroundServiceServer interface {
 	// Initialiize new folder/workspace into config file
-	InitWorkspace(context.Context, *InitRequest) (*InitResponse, error)
+	InitWorkspaceConnWithPort(context.Context, *InitRequest) (*InitResponse, error)
 	// Gets Host PC's (from which we're cloning files) public Keys
 	GetHostPcPublicKey(context.Context, *emptypb.Empty) (*PublicKey, error)
 	mustEmbedUnimplementedBackgroundServiceServer()
@@ -80,8 +80,8 @@ type BackgroundServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedBackgroundServiceServer struct{}
 
-func (UnimplementedBackgroundServiceServer) InitWorkspace(context.Context, *InitRequest) (*InitResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method InitWorkspace not implemented")
+func (UnimplementedBackgroundServiceServer) InitWorkspaceConnWithPort(context.Context, *InitRequest) (*InitResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InitWorkspaceConnWithPort not implemented")
 }
 func (UnimplementedBackgroundServiceServer) GetHostPcPublicKey(context.Context, *emptypb.Empty) (*PublicKey, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHostPcPublicKey not implemented")
@@ -107,20 +107,20 @@ func RegisterBackgroundServiceServer(s grpc.ServiceRegistrar, srv BackgroundServ
 	s.RegisterService(&BackgroundService_ServiceDesc, srv)
 }
 
-func _BackgroundService_InitWorkspace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _BackgroundService_InitWorkspaceConnWithPort_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(InitRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BackgroundServiceServer).InitWorkspace(ctx, in)
+		return srv.(BackgroundServiceServer).InitWorkspaceConnWithPort(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: BackgroundService_InitWorkspace_FullMethodName,
+		FullMethod: BackgroundService_InitWorkspaceConnWithPort_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BackgroundServiceServer).InitWorkspace(ctx, req.(*InitRequest))
+		return srv.(BackgroundServiceServer).InitWorkspaceConnWithPort(ctx, req.(*InitRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -151,8 +151,8 @@ var BackgroundService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*BackgroundServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "InitWorkspace",
-			Handler:    _BackgroundService_InitWorkspace_Handler,
+			MethodName: "InitWorkspaceConnWithPort",
+			Handler:    _BackgroundService_InitWorkspaceConnWithPort_Handler,
 		},
 		{
 			MethodName: "GetHostPcPublicKey",
