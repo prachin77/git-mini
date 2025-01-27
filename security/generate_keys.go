@@ -7,6 +7,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -67,3 +68,20 @@ func StorePublicKeys(publicKey *rsa.PublicKey, publicKeyFilePath string) error {
 	fmt.Println("public key successfully stored into config folder ...")
 	return os.WriteFile(publicKeyFilePath, public_pem_block, 0777)
 }
+
+func GenerateAESKeys() ([]byte , error) {
+	aesKey := make([]byte , 32)
+	if _ , err := io.ReadFull(rand.Reader , aesKey); err != nil{
+		return nil , err
+	}
+	return aesKey , nil
+}
+
+func GenerateNonce() ([]byte , error) {
+	nonce := make([]byte , 16)
+	if _ , err := io.ReadFull(rand.Reader , nonce); err != nil{
+		return nil , err
+	}
+
+	return nonce , nil
+}				

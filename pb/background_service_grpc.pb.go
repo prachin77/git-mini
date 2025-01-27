@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	BackgroundService_InitWorkspaceConnWithPort_FullMethodName = "/BackgroundService/InitWorkspaceConnWithPort"
+	BackgroundService_GetFiles_FullMethodName                  = "/BackgroundService/GetFiles"
 	BackgroundService_GetHostPcPublicKey_FullMethodName        = "/BackgroundService/GetHostPcPublicKey"
 )
 
@@ -30,6 +31,7 @@ const (
 type BackgroundServiceClient interface {
 	// Initialiize new folder/workspace into config file
 	InitWorkspaceConnWithPort(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*InitResponse, error)
+	GetFiles(ctx context.Context, in *CloneRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Files], error)
 	// Gets Host PC's (from which we're cloning files) public Keys
 	GetHostPcPublicKey(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PublicKey, error)
 }
@@ -52,6 +54,25 @@ func (c *backgroundServiceClient) InitWorkspaceConnWithPort(ctx context.Context,
 	return out, nil
 }
 
+func (c *backgroundServiceClient) GetFiles(ctx context.Context, in *CloneRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Files], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &BackgroundService_ServiceDesc.Streams[0], BackgroundService_GetFiles_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[CloneRequest, Files]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type BackgroundService_GetFilesClient = grpc.ServerStreamingClient[Files]
+
 func (c *backgroundServiceClient) GetHostPcPublicKey(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PublicKey, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PublicKey)
@@ -68,6 +89,7 @@ func (c *backgroundServiceClient) GetHostPcPublicKey(ctx context.Context, in *em
 type BackgroundServiceServer interface {
 	// Initialiize new folder/workspace into config file
 	InitWorkspaceConnWithPort(context.Context, *InitRequest) (*InitResponse, error)
+	GetFiles(*CloneRequest, grpc.ServerStreamingServer[Files]) error
 	// Gets Host PC's (from which we're cloning files) public Keys
 	GetHostPcPublicKey(context.Context, *emptypb.Empty) (*PublicKey, error)
 	mustEmbedUnimplementedBackgroundServiceServer()
@@ -82,6 +104,9 @@ type UnimplementedBackgroundServiceServer struct{}
 
 func (UnimplementedBackgroundServiceServer) InitWorkspaceConnWithPort(context.Context, *InitRequest) (*InitResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InitWorkspaceConnWithPort not implemented")
+}
+func (UnimplementedBackgroundServiceServer) GetFiles(*CloneRequest, grpc.ServerStreamingServer[Files]) error {
+	return status.Errorf(codes.Unimplemented, "method GetFiles not implemented")
 }
 func (UnimplementedBackgroundServiceServer) GetHostPcPublicKey(context.Context, *emptypb.Empty) (*PublicKey, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHostPcPublicKey not implemented")
@@ -125,6 +150,17 @@ func _BackgroundService_InitWorkspaceConnWithPort_Handler(srv interface{}, ctx c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BackgroundService_GetFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(CloneRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(BackgroundServiceServer).GetFiles(m, &grpc.GenericServerStream[CloneRequest, Files]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type BackgroundService_GetFilesServer = grpc.ServerStreamingServer[Files]
+
 func _BackgroundService_GetHostPcPublicKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -159,6 +195,12 @@ var BackgroundService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _BackgroundService_GetHostPcPublicKey_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetFiles",
+			Handler:       _BackgroundService_GetFiles_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "background_service.proto",
 }

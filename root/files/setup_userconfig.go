@@ -66,7 +66,6 @@ func CreateUserConfigFile() bool {
 	return true
 }
 
-
 // 1. writes username, port, ip_address in it
 func WriteInUserConfigFile(user_config_file_data *models.UserConfig) error {
 	jsonBytes, err := json.MarshalIndent(user_config_file_data, "", "    ")
@@ -83,9 +82,8 @@ func WriteInUserConfigFile(user_config_file_data *models.UserConfig) error {
 	return nil
 }
 
-
 // 1. reads username, port, ip_address from userconfig.json file
-func ReadFromUserConfigFile(user_config_file_data *models.UserConfig) error {
+func ReadFromUserConfigFile(user_config_file_data *models.UserConfig) (error) {
 	jsonBytes, err := os.ReadFile(models.USER_CONFIG_FILE)
 	if err != nil {
 		return err

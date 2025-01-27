@@ -11,43 +11,46 @@ import (
 )
 
 var (
-	sending_workspace = models.SendWorkSpaceFolder{}
-	log_file_msg      string
+	sending_workspace    = models.SendWorkSpaceFolder{}
+	log_file_msg         string
 )
 
 // 1. register/host a folder/workspace to send into userconfig file
 // 2. create log file inside config folder
 // 3. every user who's hosting a folder / workspace will have a log file
 func Init(background_service_client pb.BackgroundServiceClient) {
-	fmt.Print("Enter Workspace Password : ")
+	fmt.Print("Enter Workspace Password: ")
 	fmt.Scan(&sending_workspace.Workspace_Password)
 
-	// get current working directory path
+	// Get current working directory path
 	pwd, err := os.Getwd()
 	if err != nil {
-		fmt.Println("failed to retrive current working directory path : ", err)
+		fmt.Println("Failed to retrieve current working directory path:", err)
 		return
-	} else {
-		fmt.Println("current working directory path : ", pwd)
 	}
+	fmt.Println("Current working directory path:", pwd)
 
 	sending_workspace.Workspace_Path = pwd
 	sending_workspace.Workspace_Name = filepath.Base(pwd)
 
-	workspace_initalized, workspaces := files.CheckWorkSpaceInUserConfigFile(&sending_workspace)
-	if !workspace_initalized {
-		fmt.Println("Initializing workspace , wait a moment ...")
-		files.InitalizeWorkspace(&sending_workspace)
+	// Check if the workspace already exists
+	workspace_initialized, workspaces := files.CheckWorkSpaceInUserConfigFile(&sending_workspace)
+	if !workspace_initialized {
+		fmt.Println("Workspace already exists!")
+		return
 	}
+
+	fmt.Println("Initializing workspace, wait a moment ...")
+	files.InitalizeWorkspace(&sending_workspace)
 
 	log_file_msg = "Workspace " + sending_workspace.Workspace_Name + " initialized on " + sending_workspace.Workspace_Hosted_Date + "\n"
 
 	log_file_created := files.CreateLogFile()
 	if log_file_created {
 		if err := files.WriteInLogFile(log_file_msg); err == nil {
-			fmt.Println("successfully written in log file !")
+			fmt.Println("Successfully written in log file!")
 		}
 	}
 
-	fmt.Println("initialized workspaces : ", workspaces)
+	fmt.Println("Initialized workspaces:", workspaces)
 }

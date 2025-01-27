@@ -1,6 +1,8 @@
 package security
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -9,6 +11,8 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"strings"
 
 	"github.com/prachin77/pkr/models"
@@ -74,4 +78,60 @@ func DecryptWorkspacePassword(encrypted_workspace_password string) (string, erro
 	}
 
 	return string(plainText), nil
+}
+
+func AESEncryptZipFile(zip_filePath string , encrypted_zip_FilePath string  , AES_Key []byte , nonce []byte) (error) {
+	inputFile , err := os.Open(zip_filePath)
+	if err != nil{
+		return err
+	}
+	defer inputFile.Close()
+
+	outputFile , err := os.Create(encrypted_zip_FilePath)
+	if err != nil{
+		return err
+	}
+	defer outputFile.Close()
+
+	block , err := aes.NewCipher(AES_Key)
+	if err != nil{
+		return err
+	}
+	
+	stream := cipher.NewCTR(block , nonce)
+
+	writer := &cipher.StreamWriter{S:stream , W:outputFile}
+
+	if _ , err := io.Copy(writer , inputFile); err != nil{
+		return err
+	}
+
+	return nil
+}
+
+func EncryptZipFile(AES_Key string , client_publicKey string) (string , error) {
+	client_publicKey_pemBlock := strings.TrimSpace(client_publicKey)
+	block , _ := pem.Decode([]byte(client_publicKey_pemBlock))
+	if block == nil{
+		fmt.Println("error in parsing pem block !")
+		return "" , errors.New("error in parsing pem block")
+	}
+
+	publicKey_data , err := x509.ParsePKCS1PublicKey(block.Bytes)
+	if err != nil{
+		fmt.Println("error in parsing public key !")
+		return "" , err
+	}
+
+	label := []byte("")
+	hash := sha256.New()
+
+	result , err := rsa.EncryptOAEP(hash , rand.Reader , publicKey_data , []byte(AES_Key) , label)
+	if err != nil{
+		fmt.Println("error encrypting file ")
+		return "" , err
+	}
+
+	base64Encrypted := base64.StdEncoding.EncodeToString(result)
+	return base64Encrypted , nil
 }

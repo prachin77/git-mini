@@ -9,38 +9,41 @@ import (
 	"github.com/prachin77/pkr/models"
 )
 
-var (
+var (	
 	user_config = models.UserConfig{}
 )
 
 // 1. checks if workspace is already Initialized or not -> present in send workspace slice in userconfig file
 func CheckWorkSpaceInUserConfigFile(sending_workspace *models.SendWorkSpaceFolder) (bool, []models.SendWorkSpaceFolder) {
-	data, err := os.ReadFile(models.USER_CONFIG_FILE)
-	if err != nil {
-		fmt.Println("error reading from user config file:", err)
-		return false, nil
-	}
+    // Read the user config file
+    data, err := os.ReadFile(models.USER_CONFIG_FILE)
+    if err != nil {
+        fmt.Println("Error reading from user config file:", err)
+        return false, nil
+    }
 
-	if err := json.Unmarshal(data, &user_config); err != nil {
-		fmt.Println("error unmarshalling data:", err)
-		return false, nil
-	}
+    // Unmarshal JSON data
+    var user_config models.UserConfig
+    if err := json.Unmarshal(data, &user_config); err != nil {
+        fmt.Println("Error unmarshalling data:", err)
+        return false, nil
+    }
 
-	// Check if SendWorkSpaces slice is empty
-	if len(user_config.SendWorkSpaces) == 0 {
-		fmt.Println("No workspaces initialized.")
-		return false, nil
-	}
+    // Check if the workspace already exists
+    for _, workspace := range user_config.SendWorkSpaces {
+        if workspace.Workspace_Name == sending_workspace.Workspace_Name || 
+           workspace.Workspace_Password == sending_workspace.Workspace_Password {
+            fmt.Printf("Existing workspace: %+v\n", workspace)
+            return false, user_config.SendWorkSpaces
+        }
+    }
 
-	for _, workspace := range user_config.SendWorkSpaces {
-		fmt.Printf("Existing workspace : %+v\n", workspace)
-	}
-
-	return true, user_config.SendWorkSpaces
+    // Workspace does not exist
+    return true, user_config.SendWorkSpaces
 }
 
 func InitalizeWorkspace(sending_workspace *models.SendWorkSpaceFolder) {
-	sending_workspace.Workspace_Hosted_Date = time.Now().Format("2006-01-02")
+	sending_workspace.Workspace_Hosted_Date = time.Now().Format("2006-01-02 15:04:05") // yyyy:mm:dd
 
 	data, err := os.ReadFile(models.USER_CONFIG_FILE)
 	if err != nil {

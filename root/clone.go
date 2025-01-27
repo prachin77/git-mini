@@ -3,24 +3,35 @@ package root
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/prachin77/pkr/pb"
+	"github.com/prachin77/pkr/root/files"
 	"github.com/prachin77/pkr/security"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var (
 	workspace_ip string
+	choice       string
 )
 
 func Clone(background_service_client pb.BackgroundServiceClient) {
+	// 1. get host PC public key
+	// 2. get client PC public key
+	// 3. encrypt password
+	// 4. init -> dont know what to do ?
+	// 5. get files from host PC zip it & encrypt it
+	// 6. unzip it & decrypt it
+	// 7. store it in client folder
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
 	defer cancel()
 
-	fmt.Print("Enter Workspace IP [Ip:Port] : ")
+	// for now enter manually , later automatically it'll be retrieved
+	fmt.Print("Enter Workspace IP : ")
 	fmt.Scan(&workspace_ip)
 
 	fmt.Print("Enter Worspace Name : ")
@@ -35,7 +46,7 @@ func Clone(background_service_client pb.BackgroundServiceClient) {
 		return
 	}
 
-	my_public_key_filepath := GetClientPublicKeyFilepath()
+	my_public_key_filepath := files.GetClientPublicKeyFilepath()
 
 	my_public_key, err := os.ReadFile(my_public_key_filepath)
 	if err != nil {
@@ -54,34 +65,50 @@ func Clone(background_service_client pb.BackgroundServiceClient) {
 	init_res, err := background_service_client.InitWorkspaceConnWithPort(ctx, &pb.InitRequest{
 		WorkspaceName:     sending_workspace.Workspace_Name,
 		WorkspacePassword: encrypted_password,
-		// retrieve port automatically later
-		Port:        "8080",
-		WorkspaceIp: workspace_ip,
-		PublicKey:   []byte(my_public_key),
+		Port:              "8080",
+		WorkspaceIp:       workspace_ip,
+		PublicKey:         []byte(my_public_key),
 	})
 	if err != nil {
 		fmt.Println("error establishing connection to workspace to be cloned : ", err)
 		return
 	}
 
-	fmt.Println("host public key : ", res.PublicKey)
-	fmt.Println("client public key : ", my_public_key)
+	stream, err := background_service_client.GetFiles(ctx, &pb.CloneRequest{
+		WorkspacePath: init_res.WorkspacePath,
+		WorkspaceName: init_res.WorkspaceName,
+		Port:          "8080",
+	})
+	if err != nil {
+		fmt.Println("Error receiving files from server:", err)
+		return
+	}
+
+	for {
+		// Receive a chunk
+		fileChunk, err := stream.Recv()
+		if err == io.EOF {
+			fmt.Println("File transfer completed.")
+			break
+		}
+		if err != nil {
+			fmt.Println("Error receiving chunk:", err)
+			return
+		}
+
+		// Print the received chunk details
+		fmt.Printf("Received chunk: %s (%d bytes)\n", fileChunk.FileName, len(fileChunk.FileContent))
+		fmt.Printf("Chunk Content (as string): %s\n", string(fileChunk.FileContent))
+	}
+
+	fmt.Println("host public key : ", string(res.PublicKey))
+	fmt.Println("client public key : ", string(my_public_key))
 	fmt.Println("client public key file path : ", my_public_key_filepath)
 	fmt.Println("host public key file path : ", res.PublicKeyFilepath)
 	fmt.Println("encrypted workspace password : ", encrypted_password)
 	fmt.Println("\nresponse of connection to workspace to be cloned ... ")
-	fmt.Println("workspace path : ",init_res.WorkspacePath)
-	fmt.Println("workspace hosted date : ",init_res.WorkspaceHostedDate)
-	fmt.Println("username : ",init_res.Username)
-	fmt.Println("workspace hosted port : ",init_res.Port)
-}
-
-func GetClientPublicKeyFilepath() string {
-	my_public_key_filepath, err := filepath.Abs("./config/publickey.pem")
-	if err != nil {
-		fmt.Println("error retrieving client public key file path !")
-		return ""
-	} else {
-		return my_public_key_filepath
-	}
+	fmt.Println("workspace path : ", init_res.WorkspacePath)
+	fmt.Println("workspace hosted date : ", init_res.WorkspaceHostedDate)
+	fmt.Println("\nClone response ...")
+	fmt.Println("clone : ", stream)
 }

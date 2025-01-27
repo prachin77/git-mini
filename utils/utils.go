@@ -2,6 +2,10 @@ package utils
 
 import (
 	"context"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -123,3 +127,19 @@ func GetHostPrivateKeys() (string, string, error) {
 
 	return string(private_key_data), path, nil
 }
+
+// ParseBytesToPublicKey converts a PEM-encoded public key (as []byte) into an *rsa.PublicKey
+func ParseBytesToPublicKey(publicKeyBytes []byte) (*rsa.PublicKey, error) {
+	block, _ := pem.Decode(publicKeyBytes)
+	if block == nil || block.Type != "RSA PUBLIC KEY" {
+		return nil, errors.New("failed to decode PEM block containing public key")
+	}
+
+	publicKey, err := x509.ParsePKCS1PublicKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse RSA public key: %v", err)
+	}
+
+	return publicKey, nil
+}
+

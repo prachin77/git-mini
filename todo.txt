@@ -3,16 +3,17 @@ Questions to ask ?
    the folder is now in config file 
    now every time sender initalizes that folder msg'll be like already initalized 
 
-2. are host PC public & private keys = client PC's public & private keys 
-   what does init func do in clone  
-
-
+2. why while init func in clone we're sending client public key instead of host public key
+   i think because now host will've client's public key so when host will send
+   requested data by encrypting it using client's public key to client , 
+   client can decypt data using its public key 
 
 Git-mini Functions :
 1. Setup
    a. [done] generate & store public & private keys in respective files
    b. [done] store that file inside config folder 
    c. [done] store port address on which application is running
+   d. [done] store recieved workspace folder also in user config file -> (new model added)
 
 2. Security
    a . [] create another file to generate hash
@@ -21,4 +22,4 @@ Git-mini Functions :
    a. [] for now workspace path & name is current directory but user should 
          also be able to host any other folder from PC
    b. [] also check that user entering workspace name & pass is already used or not ?
-   
+   c. [] on customize port user should be able to init workspace otherwise default port

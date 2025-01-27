@@ -9,10 +9,22 @@ service BackgroundService{
     // Initialiize new folder/workspace into config file 
     rpc InitWorkspaceConnWithPort (InitRequest)  returns (InitResponse);
 
+    rpc GetFiles (CloneRequest) returns (stream Files);
+
     // Gets Host PC's (from which we're cloning files) public Keys 
     rpc GetHostPcPublicKey (google.protobuf.Empty) returns (PublicKey);
 }
 
+message CloneRequest {
+    string workspace_path = 1;
+    string workspace_name = 2;
+    string port = 3;
+}
+
+message Files {
+    string file_name = 1;  
+    bytes file_content = 2; 
+}
 
 message InitRequest{
     string workspace_name = 1;
@@ -24,9 +36,10 @@ message InitRequest{
 
 message InitResponse{
     string workspace_path = 1;
-    string port = 2;
-    string username = 3;
-    string workspace_hosted_date = 4;
+    string workspace_name = 2;
+    string port = 3;
+    string username = 4;
+    string workspace_hosted_date = 5;
 }
 
 message PublicKey {
