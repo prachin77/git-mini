@@ -13,7 +13,6 @@ import (
 	"github.com/prachin77/pkr/pb"
 	"github.com/prachin77/pkr/root/files"
 	"github.com/prachin77/pkr/security"
-	"github.com/prachin77/pkr/utils"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -31,7 +30,7 @@ const (
 )
 
 func (s *BackgroundServiceServer) GetHostPcPublicKey(ctx context.Context, req *emptypb.Empty) (*pb.PublicKey, error) {
-	public_key_data, host_public_key_file_path, err := utils.GetHostPublicKey()
+	public_key_data, host_public_key_file_path, err := security.GetPublicKey()
 	if err != nil {
 		fmt.Println("Error retrieving host public key:", err)
 		return nil, err
@@ -64,7 +63,7 @@ func (s *BackgroundServiceServer) InitWorkspaceConnWithPort(ctx context.Context,
 	}
 
 	// Decrypt workspace password using host PC private key
-	decrypted_password, err := security.DecryptWorkspacePassword(req.WorkspacePassword)
+	decrypted_password, err := security.DecryptData(req.WorkspacePassword)
 	if err != nil {
 		fmt.Println("error decrypting workspace password: ", err)
 		return nil, errors.New("failed to decrypt workspace password")
@@ -80,7 +79,7 @@ func (s *BackgroundServiceServer) InitWorkspaceConnWithPort(ctx context.Context,
 	// store client public key to host PC
 	// bcz when sending files from host PC to client
 	// we can send encrypted data using client public key
-	clientPublicKey, err := utils.ParseBytesToPublicKey(req.PublicKey)
+	clientPublicKey, err := security.ParseBytesToPublicKey(req.PublicKey)
 	if err != nil {
 		fmt.Println("error parsing client public key: ", err)
 		return nil, errors.New("invalid public key provided")
@@ -106,17 +105,16 @@ func (s *BackgroundServiceServer) InitWorkspaceConnWithPort(ctx context.Context,
 
 func (s *BackgroundServiceServer) GetFiles(req *pb.CloneRequest, stream pb.BackgroundService_GetFilesServer) error {
 	// 1. Zip folder to be cloned except for folders & files -> config, exe files
+
 	fmt.Println("Host PC workspace path:", req.WorkspacePath)
 	fmt.Println("Host PC workspace name:", req.WorkspaceName)
 
-	// Step 1: Create a zip file
 	zip_filePath, err := files.ZipData(req.WorkspacePath, req.WorkspaceName)
 	if err != nil {
 		fmt.Println("Error zipping files inside folder:", err)
 		return err
 	}
 
-	// Step 2: Generate AES key and nonce
 	AES_KEY, err := security.GenerateAESKeys()
 	if err != nil {
 		fmt.Println("Error generating AES key:", err)
@@ -129,7 +127,6 @@ func (s *BackgroundServiceServer) GetFiles(req *pb.CloneRequest, stream pb.Backg
 		return err
 	}
 
-	// Step 3: Encrypt the zip file
 	encrypted_zip_FilePath := strings.Replace(zip_filePath, ".zip", ".enc", 1)
 	err = security.AESEncryptZipFile(zip_filePath, encrypted_zip_FilePath, AES_KEY, nonce)
 	if err != nil {
@@ -137,14 +134,12 @@ func (s *BackgroundServiceServer) GetFiles(req *pb.CloneRequest, stream pb.Backg
 		return err
 	}
 
-	// Step 4: Read client public key
 	client_publicKey, err := os.ReadFile(Client_publicKey_Filepath)
 	if err != nil {
 		fmt.Println("Error accessing client public key from host PC:", err)
 		return err
 	}
 
-	// Step 5: Encrypt AES key and nonce with client's public key
 	encrypt_key, err := security.EncryptZipFile(string(AES_KEY), string(client_publicKey))
 	if err != nil {
 		fmt.Println("Error encrypting AES key:", err)
@@ -157,7 +152,6 @@ func (s *BackgroundServiceServer) GetFiles(req *pb.CloneRequest, stream pb.Backg
 		return err
 	}
 
-	// Step 6: Open the encrypted zip file
 	encrypted_zipFile_data, err := os.Open(encrypted_zip_FilePath)
 	if err != nil {
 		fmt.Println("Error opening encrypted zip file!")
@@ -165,14 +159,23 @@ func (s *BackgroundServiceServer) GetFiles(req *pb.CloneRequest, stream pb.Backg
 	}
 	defer encrypted_zipFile_data.Close()
 
-	// Send metadata (key and nonce) to the client
 	metadata := &pb.Files{
-		FileName:    "metadata.enc",
-		FileContent: []byte(fmt.Sprintf("Key:%s|Nonce:%s", encrypt_key, encrypt_nonce)),
+		Filetype:    1, // AES_KEY (filetype: 1)
+		FileContent: []byte(encrypt_key),
 	}
 	err = stream.Send(metadata)
 	if err != nil {
-		fmt.Println("Error sending metadata:", err)
+		fmt.Println("Error sending encrypted key metadata:", err)
+		return err
+	}
+
+	metadataNonce := &pb.Files{
+		Filetype:    2, // AES_Nonce (filetype: 2)
+		FileContent: []byte(encrypt_nonce),
+	}
+	err = stream.Send(metadataNonce)
+	if err != nil {
+		fmt.Println("Error sending encrypted nonce metadata:", err)
 		return err
 	}
 
@@ -202,7 +205,7 @@ func (s *BackgroundServiceServer) GetFiles(req *pb.CloneRequest, stream pb.Backg
 		retryCount := 0
 		for {
 			err = stream.Send(&pb.Files{
-				FileName:    fmt.Sprintf("workspace_chunk_%d.enc", chunkNumber),
+				Filetype:    0, // Data (filetype: 0)
 				FileContent: chunkData,
 			})
 			if err == nil {
@@ -221,7 +224,6 @@ func (s *BackgroundServiceServer) GetFiles(req *pb.CloneRequest, stream pb.Backg
 		}
 	}
 
-	// Final status logs
 	fmt.Printf("Total chunks sent: %d\n", chunkNumber)
 	fmt.Printf("Total bytes sent: %d\n", totalBytesSent)
 	fmt.Println("Encrypted zip file transfer completed.")

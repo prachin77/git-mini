@@ -9,6 +9,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+
+	"github.com/prachin77/pkr/models"
 )
 
 var (
@@ -69,19 +72,63 @@ func StorePublicKeys(publicKey *rsa.PublicKey, publicKeyFilePath string) error {
 	return os.WriteFile(publicKeyFilePath, public_pem_block, 0777)
 }
 
-func GenerateAESKeys() ([]byte , error) {
-	aesKey := make([]byte , 32)
-	if _ , err := io.ReadFull(rand.Reader , aesKey); err != nil{
-		return nil , err
+func GetPublicKey() (string, string, error) {
+	public_key_data, err := os.ReadFile(models.PUBLIC_KEY_FILE)
+	if err != nil {
+		return "", "", err
 	}
-	return aesKey , nil
+
+	path, err := filepath.Abs(models.PUBLIC_KEY_FILE)
+	if err != nil {
+		fmt.Println("error retrieving host public key file path : ", err)
+		return "", "", err
+	}
+	return string(public_key_data), path, nil
 }
 
-func GenerateNonce() ([]byte , error) {
-	nonce := make([]byte , 16)
-	if _ , err := io.ReadFull(rand.Reader , nonce); err != nil{
-		return nil , err
+func GetPrivateKeys() (string, string, error) {
+	private_key_data, err := os.ReadFile(models.PRIVATE_KEY_FILE)
+	if err != nil {
+		return "", "", err
 	}
 
-	return nonce , nil
-}				
+	path, err := filepath.Abs(models.PRIVATE_KEY_FILE)
+	if err != nil {
+		fmt.Println("error retrieving host public key file path : ", err)
+		return "", "", err
+	}
+
+	return string(private_key_data), path, nil
+}
+
+// ParseBytesToPublicKey converts a PEM-encoded public key (as []byte) into an *rsa.PublicKey
+func ParseBytesToPublicKey(publicKeyBytes []byte) (*rsa.PublicKey, error) {
+	block, _ := pem.Decode(publicKeyBytes)
+	if block == nil || block.Type != "RSA PUBLIC KEY" {
+		return nil, errors.New("failed to decode PEM block containing public key")
+	}
+
+	publicKey, err := x509.ParsePKCS1PublicKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse RSA public key: %v", err)
+	}
+
+	return publicKey, nil
+}
+
+func GenerateAESKeys() ([]byte, error) {
+	aesKey := make([]byte, 32)
+	if _, err := io.ReadFull(rand.Reader, aesKey); err != nil {
+		return nil, err
+	}
+	return aesKey, nil
+}
+
+func GenerateNonce() ([]byte, error) {
+	nonce := make([]byte, 16)
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, err
+	}
+
+	return nonce, nil
+}

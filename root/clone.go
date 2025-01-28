@@ -3,7 +3,6 @@ package root
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"time"
 
@@ -50,13 +49,12 @@ func Clone(background_service_client pb.BackgroundServiceClient) {
 
 	my_public_key, err := os.ReadFile(my_public_key_filepath)
 	if err != nil {
-		fmt.Println("failed to read client public key !")
-		return
+		fmt.Println("error retrieving client public key file path : ", err)
 	}
 
 	// encrypt workspace password using host PC public key
 	// bcz when host will decrypt password it will have its public key
-	encrypted_password, err := security.EncryptWorkspacePassword(&sending_workspace, string(res.PublicKey))
+	encrypted_password, err := security.EncryptData(&sending_workspace, string(res.PublicKey))
 	if err != nil {
 		fmt.Println("Unable to encrypt workspace password:", err)
 		return
@@ -84,22 +82,46 @@ func Clone(background_service_client pb.BackgroundServiceClient) {
 		return
 	}
 
+	var data_bytes []byte
+	var key_bytes []byte
+	var nonce_bytes []byte
+
 	for {
-		// Receive a chunk
-		fileChunk, err := stream.Recv()
-		if err == io.EOF {
-			fmt.Println("File transfer completed.")
-			break
-		}
+		data, err := stream.Recv()
 		if err != nil {
-			fmt.Println("Error receiving chunk:", err)
-			return
+			fmt.Println("error recieving data chunks")
 		}
 
-		// Print the received chunk details
-		fmt.Printf("Received chunk: %s (%d bytes)\n", fileChunk.FileName, len(fileChunk.FileContent))
-		fmt.Printf("Chunk Content (as string): %s\n", string(fileChunk.FileContent))
+		if data.Filetype == 0 {
+			data_bytes = append(data_bytes, data.FileContent...)
+		} else if data.Filetype == 1 {
+			key_bytes = append(key_bytes, data.FileContent...)
+		} else if data.Filetype == 2 {
+			nonce_bytes = append(nonce_bytes, data.FileContent...)
+			break
+		}
 	}
+
+	// for {
+	// 	// Receive a chunk continously , eventually recieving whole zip file but in bytes
+	// 	fileChunk, err := stream.Recv()
+	// 	if err == io.EOF {
+	// 		fmt.Println("File transfer completed.")
+	// 		break
+	// 	}
+	// 	if err != nil {
+	// 		fmt.Println("Error receiving chunk:", err)
+	// 		return
+	// 	}
+
+	// 	fmt.Printf("Received chunk of type: %d (%d bytes)\n", fileChunk.Filetype, len(fileChunk.FileContent))
+	// 	fmt.Printf("Chunk Content (as string): %s\n", string(fileChunk.FileContent))
+	// }
+
+	// decrypted_key , err := security.DecryptData(string(key_bytes))
+	// if err != nil{
+	// 	fmt.Println("error decrypting AES key : ",err)
+	// }
 
 	fmt.Println("host public key : ", string(res.PublicKey))
 	fmt.Println("client public key : ", string(my_public_key))
@@ -110,5 +132,7 @@ func Clone(background_service_client pb.BackgroundServiceClient) {
 	fmt.Println("workspace path : ", init_res.WorkspacePath)
 	fmt.Println("workspace hosted date : ", init_res.WorkspaceHostedDate)
 	fmt.Println("\nClone response ...")
-	fmt.Println("clone : ", stream)
+	fmt.Println("zipped file data bytes : ", string(data_bytes))
+	fmt.Println("zipped AES key bytes : ", string(key_bytes))
+	fmt.Println("zipped file nonce bytes : ", string(nonce_bytes))
 }

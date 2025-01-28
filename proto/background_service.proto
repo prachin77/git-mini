@@ -22,8 +22,8 @@ message CloneRequest {
 }
 
 message Files {
-    string file_name = 1;  
-    bytes file_content = 2; 
+    uint32 filetype = 1; // Data[0] or AES_KEY[1] or AES_Nonce[2]
+    bytes file_content = 2; // chunk
 }
 
 message InitRequest{

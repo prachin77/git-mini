@@ -2,20 +2,14 @@ package utils
 
 import (
 	"context"
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
-	"errors"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"time"
 
-	"github.com/prachin77/pkr/models"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
 )
@@ -98,48 +92,3 @@ func ClearScreen() {
 	cmd.Stdout = os.Stdout
 	cmd.Run()
 }
-
-func GetHostPublicKey() (string, string, error) {
-	public_key_data, err := os.ReadFile(models.PUBLIC_KEY_FILE)
-	if err != nil {
-		return "", "", err
-	}
-
-	path, err := filepath.Abs(models.PUBLIC_KEY_FILE)
-	if err != nil {
-		fmt.Println("error retrieving host public key file path : ", err)
-		return "", "", err
-	}
-	return string(public_key_data), path, nil
-}
-
-func GetHostPrivateKeys() (string, string, error) {
-	private_key_data, err := os.ReadFile(models.PRIVATE_KEY_FILE)
-	if err != nil {
-		return "", "", err
-	}
-
-	path, err := filepath.Abs(models.PRIVATE_KEY_FILE)
-	if err != nil {
-		fmt.Println("error retrieving host public key file path : ", err)
-		return "", "", err
-	}
-
-	return string(private_key_data), path, nil
-}
-
-// ParseBytesToPublicKey converts a PEM-encoded public key (as []byte) into an *rsa.PublicKey
-func ParseBytesToPublicKey(publicKeyBytes []byte) (*rsa.PublicKey, error) {
-	block, _ := pem.Decode(publicKeyBytes)
-	if block == nil || block.Type != "RSA PUBLIC KEY" {
-		return nil, errors.New("failed to decode PEM block containing public key")
-	}
-
-	publicKey, err := x509.ParsePKCS1PublicKey(block.Bytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse RSA public key: %v", err)
-	}
-
-	return publicKey, nil
-}
-
