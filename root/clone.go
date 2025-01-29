@@ -3,6 +3,7 @@ package root
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -14,10 +15,11 @@ import (
 
 var (
 	workspace_ip string
-	choice       string
 )
 
 func Clone(background_service_client pb.BackgroundServiceClient) {
+	// # check ip of host & ip given by client are same or not -> later not now
+
 	// 1. get host PC public key
 	// 2. get client PC public key
 	// 3. encrypt password
@@ -88,16 +90,25 @@ func Clone(background_service_client pb.BackgroundServiceClient) {
 
 	for {
 		data, err := stream.Recv()
+		if err == io.EOF {
+			fmt.Println("End of stream reached.")
+			break
+		}
 		if err != nil {
-			fmt.Println("error recieving data chunks")
+			fmt.Println("Error receiving data chunk:", err)
+			return
 		}
 
-		if data.Filetype == 0 {
+		switch data.Filetype {
+		case 0:
 			data_bytes = append(data_bytes, data.FileContent...)
-		} else if data.Filetype == 1 {
+			fmt.Printf("Received data chunk of size %d bytes\n", len(data.FileContent))
+		case 1:
 			key_bytes = append(key_bytes, data.FileContent...)
-		} else if data.Filetype == 2 {
+			fmt.Println("Received key chunk")
+		case 2:
 			nonce_bytes = append(nonce_bytes, data.FileContent...)
+			fmt.Println("Received nonce chunk")
 			break
 		}
 	}
@@ -118,21 +129,47 @@ func Clone(background_service_client pb.BackgroundServiceClient) {
 	// 	fmt.Printf("Chunk Content (as string): %s\n", string(fileChunk.FileContent))
 	// }
 
-	// decrypted_key , err := security.DecryptData(string(key_bytes))
-	// if err != nil{
-	// 	fmt.Println("error decrypting AES key : ",err)
-	// }
+	decrypted_key, err := security.DecryptData(string(key_bytes))
+	if err != nil {
+		fmt.Println("error decrypting AES key : ", err)
+	}
 
-	fmt.Println("host public key : ", string(res.PublicKey))
-	fmt.Println("client public key : ", string(my_public_key))
-	fmt.Println("client public key file path : ", my_public_key_filepath)
-	fmt.Println("host public key file path : ", res.PublicKeyFilepath)
-	fmt.Println("encrypted workspace password : ", encrypted_password)
-	fmt.Println("\nresponse of connection to workspace to be cloned ... ")
-	fmt.Println("workspace path : ", init_res.WorkspacePath)
-	fmt.Println("workspace hosted date : ", init_res.WorkspaceHostedDate)
-	fmt.Println("\nClone response ...")
-	fmt.Println("zipped file data bytes : ", string(data_bytes))
-	fmt.Println("zipped AES key bytes : ", string(key_bytes))
-	fmt.Println("zipped file nonce bytes : ", string(nonce_bytes))
+	decrypted_nonce, err := security.DecryptData(string(nonce_bytes))
+	if err != nil {
+		fmt.Println("error decrypting nonce (AES) key : ", err)
+	}
+
+	// get decrypted zip file data from host in bytes
+	data, err := security.AESDecryptZipFile(data_bytes, decrypted_key, decrypted_nonce)
+	if err != nil {
+		fmt.Println("error decrypting zip file with AES key : ", err)
+	}
+
+	ZipFilePath := init_res.WorkspaceName + "_zip.zip"
+	if err = files.SaveDataToZip(data, ZipFilePath); err != nil {
+		fmt.Println("error saving data from host to client zip file : ", err)
+	}
+
+	pwd , err := os.Getwd()
+	if err != nil{
+		fmt.Println("error retrieving current working directory path : ",err)
+	}
+	fmt.Println("current working directory path : ",pwd)
+	if err := files.UnZipData(ZipFilePath , pwd); err != nil{
+		fmt.Println("error unzipping file : ",err)
+	}
+
+	// remove zip file 
+	file , err := os.Open(ZipFilePath)
+	if err != nil{
+		fmt.Println("zip file not found : ",err)
+	}
+	defer os.Remove(ZipFilePath)
+	file.Close()
+
+	// save to user config file 
+	err = files.WriteRecivedWorkspaceInConfigFile(init_res.WorkspaceName , init_res.WorkspacePath , workspace_ip)
+	if err != nil{
+		fmt.Println("error saving received workspace info to config file : ",err)
+	}
 }

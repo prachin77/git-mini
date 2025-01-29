@@ -1,6 +1,7 @@
 package security
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -135,6 +136,22 @@ func EncryptZipFile(AES_Key string, client_publicKey string) (string, error) {
 	return base64Encrypted, nil
 }
 
-// func DecryptData(cipherText string) (string , error) {
+func AESDecryptZipFile(data_bytes []byte , AES_Key string , nonce string) ([]byte , error) {
+	// create AES cipher text (a random text everytime)
+	block , err := aes.NewCipher([]byte(AES_Key))
+	if err != nil{
+		return nil , err
+	}
 
-// }
+	stream := cipher.NewCTR(block , []byte(nonce))
+
+	// Create a buffer to hold the decrypted data
+	var decryptedData bytes.Buffer
+	writer := &cipher.StreamWriter{S:stream , W:&decryptedData}
+
+	if _ , err := writer.Write(data_bytes); err != nil{
+		return nil ,err
+	}
+
+	return decryptedData.Bytes() , nil
+}

@@ -7,12 +7,14 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/prachin77/pkr/models"
 )
 
 var (
 	sending_workspace     = models.SendWorkSpaceFolder{}
+	recieved_workspace    = models.RecievedWorkSpaceFolder{}
 	workspace_path        string
 	workspace_hosted_date string
 	workspace_hosted_port string
@@ -172,4 +174,101 @@ func ZipData(workspacePath string, workspaceName string) (string, error) {
 
 	// Return the path of the created zip file
 	return filepath.Abs(ZipFolderName)
+}
+
+func UnZipData(ZipFilePath string, DestPath string) error {
+	zipReader, err := zip.OpenReader(ZipFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to open zip file: %v", err)
+	}
+	defer zipReader.Close()
+
+	var fileCount, folderCount int
+
+	for _, file := range zipReader.File {
+		fullPath := filepath.Join(DestPath, file.Name)
+
+		if file.FileInfo().IsDir() {
+			if err := os.MkdirAll(fullPath, os.ModePerm); err != nil {
+				return fmt.Errorf("failed to create directory: %v", err)
+			}
+			folderCount++
+			continue
+		}
+
+		if err := os.MkdirAll(filepath.Dir(fullPath), os.ModePerm); err != nil {
+			return fmt.Errorf("failed to create parent directory: %v", err)
+		}
+
+		fileReader, err := file.Open()
+		if err != nil {
+			return fmt.Errorf("failed to open file in zip: %v", err)
+		}
+		defer fileReader.Close()
+
+		outFile, err := os.Create(fullPath)
+		if err != nil {
+			return fmt.Errorf("failed to create file: %v", err)
+		}
+		defer outFile.Close()
+
+		if _, err := io.Copy(outFile, fileReader); err != nil {
+			return fmt.Errorf("failed to copy file contents: %v", err)
+		}
+
+		fileCount++
+	}
+
+	fmt.Printf("%d] files unzipped  \n%d] folders unzipped\n", fileCount, folderCount)
+	return nil
+}
+
+func SaveDataToZip(data []byte, zipFilePath string) error {
+	zippedFile, err := os.Create(zipFilePath)
+	if err != nil {
+		fmt.Println("error creating data from host zip file to client zip file !")
+		return err
+	}
+	defer zippedFile.Close()
+
+	zippedFile.Write(data)
+
+	return nil
+}
+
+func WriteRecivedWorkspaceInConfigFile(workspace_name string, workspace_path string, workspace_IP string) error {
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+
+	data, err := os.ReadFile(models.USER_CONFIG_FILE)
+	if err != nil {
+		fmt.Println("error reading user config file : ", err)
+		return err
+	}
+
+	if err := json.Unmarshal(data, &user_config); err != nil {
+		fmt.Println("error unmarshalling data in JSON format : ", err)
+		return err
+	}
+
+	recieved_workspace.Recieved_Date = currentDate
+	recieved_workspace.Workspace_Name = workspace_name
+	recieved_workspace.Workspace_IP = workspace_IP
+	recieved_workspace.Workspace_Path = workspace_path
+
+	user_config.RecievedWorkspaces = append(user_config.RecievedWorkspaces, recieved_workspace)
+
+	updatedData , err := json.MarshalIndent(user_config,""," ")
+	if err != nil{
+		fmt.Println("error marshalling updated data into JSON format : ",err)
+		return err
+	}
+
+	err = os.WriteFile(models.USER_CONFIG_FILE , updatedData , os.ModePerm)
+	if err != nil{
+		fmt.Println("error writing data into user config file : ",err)
+	}
+
+	fmt.Println("Data succesfully written into file ...")
+
+	return nil
 }
