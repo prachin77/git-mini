@@ -6,13 +6,25 @@ import "google/protobuf/empty.proto";
 option go_package = "/pb";
 
 service BackgroundService{
+    // Check Client & Host IP address 
+    rpc CheckIpAddress (IpRequest) returns (IpResponse);
+
     // Initialiize new folder/workspace into config file 
     rpc InitWorkspaceConnWithPort (InitRequest)  returns (InitResponse);
 
+    // Retrieve files from Host PC to Client PC
     rpc GetFiles (CloneRequest) returns (stream Files);
 
     // Gets Host PC's (from which we're cloning files) public Keys 
     rpc GetHostPcPublicKey (google.protobuf.Empty) returns (PublicKey);
+}
+
+message IpRequest {
+    string ip_address = 1;
+}
+
+message IpResponse {
+    bool response = 1;
 }
 
 message CloneRequest {

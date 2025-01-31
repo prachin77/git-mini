@@ -35,6 +35,16 @@ func Clone(background_service_client pb.BackgroundServiceClient) {
 	fmt.Print("Enter Workspace IP : ")
 	fmt.Scan(&workspace_ip)
 
+	IpRes, err := background_service_client.CheckIpAddress(ctx, &pb.IpRequest{
+		IpAddress: workspace_ip,
+	})
+	if err != nil {
+		fmt.Println("Error: Client & Host IP address mismatch or verification failed:", err)
+		return
+	}
+
+	fmt.Println("CLient Ip address matched with Host Ip address ... : ",IpRes.Response)
+
 	fmt.Print("Enter Worspace Name : ")
 	fmt.Scan(&sending_workspace.Workspace_Name)
 

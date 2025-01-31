@@ -20,6 +20,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	BackgroundService_CheckIpAddress_FullMethodName            = "/BackgroundService/CheckIpAddress"
 	BackgroundService_InitWorkspaceConnWithPort_FullMethodName = "/BackgroundService/InitWorkspaceConnWithPort"
 	BackgroundService_GetFiles_FullMethodName                  = "/BackgroundService/GetFiles"
 	BackgroundService_GetHostPcPublicKey_FullMethodName        = "/BackgroundService/GetHostPcPublicKey"
@@ -29,8 +30,11 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BackgroundServiceClient interface {
+	// Check Client & Host IP address
+	CheckIpAddress(ctx context.Context, in *IpRequest, opts ...grpc.CallOption) (*IpResponse, error)
 	// Initialiize new folder/workspace into config file
 	InitWorkspaceConnWithPort(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*InitResponse, error)
+	// Retrieve files from Host PC to Client PC
 	GetFiles(ctx context.Context, in *CloneRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Files], error)
 	// Gets Host PC's (from which we're cloning files) public Keys
 	GetHostPcPublicKey(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PublicKey, error)
@@ -42,6 +46,16 @@ type backgroundServiceClient struct {
 
 func NewBackgroundServiceClient(cc grpc.ClientConnInterface) BackgroundServiceClient {
 	return &backgroundServiceClient{cc}
+}
+
+func (c *backgroundServiceClient) CheckIpAddress(ctx context.Context, in *IpRequest, opts ...grpc.CallOption) (*IpResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IpResponse)
+	err := c.cc.Invoke(ctx, BackgroundService_CheckIpAddress_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *backgroundServiceClient) InitWorkspaceConnWithPort(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*InitResponse, error) {
@@ -87,8 +101,11 @@ func (c *backgroundServiceClient) GetHostPcPublicKey(ctx context.Context, in *em
 // All implementations must embed UnimplementedBackgroundServiceServer
 // for forward compatibility.
 type BackgroundServiceServer interface {
+	// Check Client & Host IP address
+	CheckIpAddress(context.Context, *IpRequest) (*IpResponse, error)
 	// Initialiize new folder/workspace into config file
 	InitWorkspaceConnWithPort(context.Context, *InitRequest) (*InitResponse, error)
+	// Retrieve files from Host PC to Client PC
 	GetFiles(*CloneRequest, grpc.ServerStreamingServer[Files]) error
 	// Gets Host PC's (from which we're cloning files) public Keys
 	GetHostPcPublicKey(context.Context, *emptypb.Empty) (*PublicKey, error)
@@ -102,6 +119,9 @@ type BackgroundServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedBackgroundServiceServer struct{}
 
+func (UnimplementedBackgroundServiceServer) CheckIpAddress(context.Context, *IpRequest) (*IpResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckIpAddress not implemented")
+}
 func (UnimplementedBackgroundServiceServer) InitWorkspaceConnWithPort(context.Context, *InitRequest) (*InitResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InitWorkspaceConnWithPort not implemented")
 }
@@ -130,6 +150,24 @@ func RegisterBackgroundServiceServer(s grpc.ServiceRegistrar, srv BackgroundServ
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&BackgroundService_ServiceDesc, srv)
+}
+
+func _BackgroundService_CheckIpAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IpRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BackgroundServiceServer).CheckIpAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BackgroundService_CheckIpAddress_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BackgroundServiceServer).CheckIpAddress(ctx, req.(*IpRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _BackgroundService_InitWorkspaceConnWithPort_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -186,6 +224,10 @@ var BackgroundService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "BackgroundService",
 	HandlerType: (*BackgroundServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CheckIpAddress",
+			Handler:    _BackgroundService_CheckIpAddress_Handler,
+		},
 		{
 			MethodName: "InitWorkspaceConnWithPort",
 			Handler:    _BackgroundService_InitWorkspaceConnWithPort_Handler,

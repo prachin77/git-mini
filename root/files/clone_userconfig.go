@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/prachin77/pkr/models"
@@ -21,6 +23,25 @@ var (
 	username              string
 )
 
+func GetIpAdd() (string, error) {
+	cmd := exec.Command("ipconfig")
+	output, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	// Convert output to string
+	outputStr := string(output)
+
+	// Extract IPv4 address (basic regex for Windows `ipconfig` output)
+	re := regexp.MustCompile(`IPv4 Address[.\s]*:\s*([\d.]+)`)
+	match := re.FindStringSubmatch(outputStr)
+	if len(match) < 2 {
+		return "", fmt.Errorf("could not find IP address in ipconfig output")
+	}
+
+	return match[1], nil
+}
 func GetClientPublicKeyFilepath() string {
 	my_public_key_filepath, err := filepath.Abs("./config/publickey.pem")
 	if err != nil {
@@ -257,15 +278,15 @@ func WriteRecivedWorkspaceInConfigFile(workspace_name string, workspace_path str
 
 	user_config.RecievedWorkspaces = append(user_config.RecievedWorkspaces, recieved_workspace)
 
-	updatedData , err := json.MarshalIndent(user_config,""," ")
-	if err != nil{
-		fmt.Println("error marshalling updated data into JSON format : ",err)
+	updatedData, err := json.MarshalIndent(user_config, "", " ")
+	if err != nil {
+		fmt.Println("error marshalling updated data into JSON format : ", err)
 		return err
 	}
 
-	err = os.WriteFile(models.USER_CONFIG_FILE , updatedData , os.ModePerm)
-	if err != nil{
-		fmt.Println("error writing data into user config file : ",err)
+	err = os.WriteFile(models.USER_CONFIG_FILE, updatedData, os.ModePerm)
+	if err != nil {
+		fmt.Println("error writing data into user config file : ", err)
 	}
 
 	fmt.Println("Data succesfully written into file ...")

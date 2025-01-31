@@ -29,6 +29,19 @@ const (
 	Client_publicKey_Filepath = models.ROOT_DIR + "\\clientPublicKey.pem"
 )
 
+func (s *BackgroundServiceServer) CheckIpAddress(ctx context.Context, req *pb.IpRequest) (*pb.IpResponse, error) {
+    serverIp, err := files.GetIpAdd()
+    if err != nil {
+        return nil, fmt.Errorf("error retrieving server IP address: %v", err)
+    }
+
+    if req.IpAddress != serverIp {
+        return nil, fmt.Errorf("IP address mismatch: client (%s) != server (%s)", req.IpAddress, serverIp)
+    }
+
+    return &pb.IpResponse{Response: true}, nil
+}
+
 func (s *BackgroundServiceServer) GetHostPcPublicKey(ctx context.Context, req *emptypb.Empty) (*pb.PublicKey, error) {
 	public_key_data, host_public_key_file_path, err := security.GetPublicKey()
 	if err != nil {
