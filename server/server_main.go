@@ -18,6 +18,7 @@ import (
 )
 
 const (
+	ip = "0.0.0.0" // public IP -> so that anyone (client) can access from anywhere
 	port = ":8080"
 )
 
@@ -26,7 +27,7 @@ const (
 // }
 
 func main() {
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", ip + port)
 	if err != nil {
 		fmt.Println("error lisening to tcp server at port : ", lis.Addr())
 	}

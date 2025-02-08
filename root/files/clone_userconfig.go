@@ -42,6 +42,7 @@ func GetIpAdd() (string, error) {
 
 	return match[1], nil
 }
+
 func GetClientPublicKeyFilepath() string {
 	my_public_key_filepath, err := filepath.Abs("./config/publickey.pem")
 	if err != nil {

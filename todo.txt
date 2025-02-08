@@ -8,6 +8,8 @@ Questions to ask ?
    requested data by encrypting it using client's public key to client , 
    client can decypt data using its public key 
 
+
+
 Git-mini Functions :
 1. Setup
    a. [done] generate & store public & private keys in respective files
